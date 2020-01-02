@@ -1,7 +1,12 @@
-depdag
-------
 
-A DAG-based dependency tracking utility.
+depdag
+======
+
+A DAG-based dependency tracking utility
+
+
+Intro
+*****
 
 Helps track dependencies via representing dependency relationships as edges in
 a Directed Acyclic Graph (DAG). We call a vertex depending on other vertices
@@ -9,10 +14,16 @@ a *dependant*, and a vertex other vertices depend on a *supporter*.
 
 In case entities represented by DAG vertices may have certain payload associated
 with them, depdag provides answer to the question: "Is this vertex resolved?",
-that is, has it and all its supporters, recursively, being provided with payload
+that is, has it and all its supporters, recursively, been provided with payload
 -- the ``Vertex::is_resolved()`` method does that.
 
-An example of typical usage::
+
+An example
+**********
+
+An example of typical usage:
+
+.. code:: python
 
  from depdag import DepDag
 
@@ -46,3 +57,20 @@ An example of typical usage::
  vert.c.payload = "vert-c payload (can be anything)"
  vert.e.payload = "vert-d payload (can be anything)"
  assert vert.c.is_resolved()
+
+
+Running the tests
+*****************
+
+Using the standard library `unittest` would do::
+
+ $ python -m unittest -discover ./tests/
+
+or with recent versions of python3, simply::
+
+ $ python -m unittest
+
+If you have (or are willing to install) `pytest`, it would also work fine::
+
+ $ pytest ./tests/
+
