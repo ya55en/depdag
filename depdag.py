@@ -57,9 +57,9 @@ __version_tuple__ = (0, 2, 0)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
-from typing import List, Dict, Iterable, Optional, Any
+from typing import List, Dict, Iterable, Optional, Any, Hashable
 
-VertexName = str
+VertexName = Hashable
 
 
 class Vertex:
