@@ -5,12 +5,11 @@ import unittest
 from depdag import DepDag
 
 
-class TestInegration(unittest.TestCase):
+class TestIntegration(unittest.TestCase):
 
     def test_case_1(self):
         vert = DepDag().vertices
         vert.a.depends_on('b', 'c')
-        vert.b
         vert.c.depends_on('e')
         vert.d.depends_on('e')
         vert.e.depends_on('b')
@@ -62,8 +61,6 @@ class TestInegration(unittest.TestCase):
         vert.b.depends_on('c')
         vert.c.depends_on('d')
         vert.d.depends_on('e', 'f')
-        vert.e
-        vert.f
         vert.g.depends_on('b')
         vert.h.depends_on('g')
         vert.i.depends_on('d')
