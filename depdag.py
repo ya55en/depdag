@@ -57,9 +57,9 @@ __version_tuple__ = (0, 2, 0)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
-from typing import List, Dict, Iterable, Optional, Any
+from typing import List, Dict, Iterable, Optional, Any, Hashable
 
-VertexName = str
+VertexName = Hashable
 
 
 class Vertex:
@@ -117,6 +117,9 @@ class VerticesMap:
     @property
     def dag(self):
         return self._dag
+     
+    def __contains__(self, item):
+        return item in self._vertices
 
     def __len__(self):
         return len(self._vertices)
