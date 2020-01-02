@@ -67,7 +67,6 @@ class Vertex:
     the vertices it depends on directly), the name-to-vertex mapping object
     and its provision state (provided or not).
     """
-    __slots__ = ('_name', '_vertices_map', '_supporters', '_provided', 'payload')
 
     def __init__(self, name: VertexName, vertices_map: VerticesMap):
         self._name: VertexName = name
@@ -108,6 +107,15 @@ class Vertex:
 
 
 class VerticesMap:
+    """A dict-like collection of vertices. Maps vertex names to corresponding
+    vertices. Creates a vertex under given name on first access (if not there
+    yet).
+
+    Will not accept ``__setattr__`` or ``__setitem__`` assignments for vertex
+    creation -- just access the not-yet-created vertex and you have it, or
+    use the ``create()`` method.
+    """
+
     __slots__ = ('_vertices', '_dag')
 
     def __init__(self, dag: Optional[DepDag]):
