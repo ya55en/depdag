@@ -117,6 +117,9 @@ class VerticesMap:
     @property
     def dag(self):
         return self._dag
+     
+    def __contains__(self, item):
+        return item in self._vertices
 
     def __len__(self):
         return len(self._vertices)
