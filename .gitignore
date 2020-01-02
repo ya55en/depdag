@@ -1,0 +1,17 @@
+# Python project orineted git ignore patterns
+# For inspiration see https://github.com/github/gitignore/blob/master/Python.gitignore
+
+*.py[co]
+__pycache__/
+*~
+
+# ignore python venvs
+venv/
+.venv/
+
+# coverage stuff
+.coverage
+htmlcov/
+
+# build/setup stuff
+*.egg-info

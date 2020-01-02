@@ -14,6 +14,8 @@ that is, has it and all its supporters, recursively, being provided with payload
 
 An example of typical usage::
 
+ from depdag import DepDag
+
  # Create the DAG structure and get a reference to the vertices collection:
  vert = DepDag().vertices
 
