@@ -55,6 +55,25 @@ class TestVertex(unittest.TestCase):
         self.assertTrue(a.is_resolved())
         self.assertTrue(b.is_resolved())
 
+    def test_vertex_name_is_tuple(self):
+        # exercising any hashable to be used as a vertex name (PR #2)
+        vmap = VerticesMap(None)
+        vmap[('vertex_a',)].depends_on(('vertex_b',))
+        self.assertEqual(
+            [('vertex_b',)],
+            vmap[('vertex_a',)].supporters(recurse=True)
+        )
+        self.assertEqual(
+            [],
+            vmap[('vertex_b',)].supporters(recurse=True)
+        )
+
+    def test__contains__(self):
+        vmap = VerticesMap(None)
+        vmap.one.depends_on('two')
+        self.assertTrue('one' in vmap)
+        self.assertTrue('two' in vmap)
+
 
 class TestVerticesMap(unittest.TestCase):
 

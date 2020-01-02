@@ -1,14 +1,15 @@
 """
-Test exercising the documentation usage exmaples.
+Test exercising the documentation usage examples.
 """
 
 import unittest
-from depdag import DepDag
 
 
 class TestUsageExample(unittest.TestCase):
 
     def test_usage_example(self):
+        from depdag import DepDag
+
         # Create the DAG structure and get a reference to the vertices collection:
         vert = DepDag().vertices
 
