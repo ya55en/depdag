@@ -81,3 +81,15 @@ If you have (or are willing to install) `pytest`, it would also work fine::
 
  $ pytest ./tests/
 
+
+
+
+Local install & PR strategy
+***************************
+Note for when the repo is installed via pip install -e <repo dir> so that the library can be imported
+in projects but also can be changed inplace. In order to make a PR for a change to this repo, a branch in a fork is needed.
+Proposed strategy
+* clone locally & install this package via pip install -e
+* add as a git remote the address of the forked repo `git remote add forked <url of fork repo>`
+* when a change is done locally, put it on a feature branch and push it to the fork so that a PR can be opened
+* once the PR is approved, locally, checkout master & pull
