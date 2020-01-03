@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name='depdag',
-    version='0.2.0',  # TODO: read it from elsewhere (e.g. separate text or .py file)
+    version='0.2.1',  # TODO: read it from elsewhere (e.g. separate text or .py file)
     description='A DAG-based dependency tracking utility',
     long_description='''
     A DAG-based dependency tracking utility which helps track dependencies with

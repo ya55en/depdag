@@ -5,6 +5,13 @@ depdag
 A DAG-based dependency tracking utility
 
 
+Disclaimer
+**********
+
+This library is largely provided as-is. It is in early state
+of development and breaking changes may happen without warning.
+
+
 Intro
 *****
 

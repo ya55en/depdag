@@ -53,7 +53,7 @@ Here an example of typical usage::
 
 from __future__ import annotations
 
-__version_tuple__ = (0, 2, 0)
+__version_tuple__ = (0, 2, 1)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
