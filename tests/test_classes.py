@@ -11,7 +11,7 @@ class TestVertex(unittest.TestCase):
     def test_creation__test_name(self):
         vertex = Vertex('vertex_11', DepDag())
         self.assertEqual('vertex_11', vertex.name)
-        self.assertFalse(vertex.has_payload)
+        self.assertFalse(vertex.has_payload())
 
     def test__repr__(self):
         vertex = Vertex('vertex_22', DepDag())
@@ -24,11 +24,25 @@ class TestVertex(unittest.TestCase):
         self.assertTrue('one' in dag)
         self.assertTrue('two' in dag)
 
-    def test_provide_payload(self):
+    def test_has_payload__for_object(self):
         vertex = Vertex('vertex_33', DepDag())
-        self.assertFalse(vertex.has_payload)
+        self.assertFalse(vertex.has_payload())
         vertex.payload = "any payload would do"
-        self.assertTrue(vertex.has_payload)
+        self.assertTrue(vertex.has_payload())
+
+    def test_has_payload__for_callable(self):
+        vertex = Vertex('vertex_44', DepDag())
+        self.assertFalse(vertex.has_payload())
+
+        call_log = list()
+
+        def has_payload_callback():
+            call_log.append('CALLED')
+            return True
+
+        vertex.payload = has_payload_callback
+        self.assertTrue(vertex.has_payload())
+        self.assertEqual(['CALLED'], call_log)
 
     def test_depends_on__test_supporters(self):
         vertex = Vertex('vertex_0', DepDag())
