@@ -11,7 +11,7 @@ class TestVertex(unittest.TestCase):
     def test_creation__test_name(self):
         vertex = Vertex('vertex_11', DepDag())
         self.assertEqual('vertex_11', vertex.name)
-        self.assertFalse(vertex.is_provided)
+        self.assertFalse(vertex.has_payload)
 
     def test__repr__(self):
         vertex = Vertex('vertex_22', DepDag())
@@ -26,9 +26,9 @@ class TestVertex(unittest.TestCase):
 
     def test_provide_payload(self):
         vertex = Vertex('vertex_33', DepDag())
-        self.assertFalse(vertex.is_provided)
+        self.assertFalse(vertex.has_payload)
         vertex.payload = "any payload would do"
-        self.assertTrue(vertex.is_provided)
+        self.assertTrue(vertex.has_payload)
 
     def test_depends_on__test_supporters(self):
         vertex = Vertex('vertex_0', DepDag())

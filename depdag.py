@@ -50,7 +50,7 @@ class Vertex:
         return self._name
 
     @property
-    def is_provided(self) -> bool:
+    def has_payload(self) -> bool:
         return self.payload is not None
 
     def depends_on(self, *vertices: VertexName) -> None:
@@ -70,7 +70,7 @@ class Vertex:
         return list(self._supporters.keys())
 
     def is_resolved(self):
-        return self.is_provided and all(
+        return self.has_payload and all(
             vertex.is_resolved() for vertex in self._supporters.values()
         )
 
