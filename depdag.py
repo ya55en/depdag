@@ -69,6 +69,9 @@ class Vertex:
         # return direct supporters of this vertex only:
         return list(self._supporters.keys())
 
+    def direct_supporters_obj(self) -> List[Vertex]:
+        return list(self._supporters.values())
+
     def is_resolved(self):
         return self.is_provided and all(
             vertex.is_resolved() for vertex in self._supporters.values()
@@ -120,14 +123,23 @@ class DepDag:
         return self._vertices.values()
 
     def is_cyclic(self) -> bool:
-        """Return True if this directed graph contains at least one cycle,
-        False otherwise."""
-        # Yes -- ugly, Q&D implementation. A better one is on the way ;)
-        # TODO: provide proper implementation
-        try:
-            for vert in self._vertices.values():
-                vert.supporters(recurse=True)
-        except RecursionError:
-            return True
-        else:
-            return False
+        """Return ``True`` if this directed graph contains at least one cycle,
+        ``False`` otherwise."""
+
+        safe_vertices = set()
+
+        def check(vertex, visited_vertices):
+            nonlocal safe_vertices
+
+            if vertex in visited_vertices:
+                return True
+
+            if not vertex.direct_supporters_obj() or vertex in safe_vertices:
+                safe_vertices |= visited_vertices
+                return False
+
+            visited_vertices.add(vertex)
+            return any(check(supporter, visited_vertices.copy())
+                       for supporter in vertex.direct_supporters_obj())
+
+        return any(check(node, set()) for node in self.all())

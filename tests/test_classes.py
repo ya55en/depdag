@@ -156,6 +156,15 @@ class TestDag(unittest.TestCase):
         dag.c.depends_on('a')
         self.assertTrue(dag.is_cyclic())
 
+    def test_is_cyclic__diamond_relationship(self):
+        dag = DepDag()
+        dag.a.depends_on('b')
+        dag.b.depends_on('c', 'd')
+        dag.c.depends_on('e')
+        dag.d.depends_on('e')
+        dag.e.depends_on('f')
+        self.assertFalse(dag.is_cyclic())
+
 
 if __name__ == '__main__':
     unittest.main()

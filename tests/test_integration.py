@@ -16,6 +16,7 @@ class TestIntegration(unittest.TestCase):
         for v in [dag.a, dag.b, dag.c, dag.d, dag.e]:
             self.assertFalse(v.is_provided)
             self.assertFalse(v.is_resolved())
+        self.assertFalse(dag.is_cyclic())
 
         dag.b.payload = 'some_payload'
         dag.d.payload = 'some_payload'
@@ -67,6 +68,7 @@ class TestIntegration(unittest.TestCase):
         for v in [dag.a, dag.b, dag.c, dag.d, dag.e, dag.f, dag.g, dag.h, dag.i]:
             self.assertFalse(v.is_provided)
             self.assertFalse(v.is_resolved())
+        self.assertFalse(dag.is_cyclic())
 
         dag.d.payload = 'some_payload'
         dag.e.payload = 'some_payload'
@@ -133,3 +135,7 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(dag.h.is_resolved())
         self.assertTrue(dag.i.is_provided)
         self.assertTrue(dag.i.is_resolved())
+
+
+if __name__ == '__main__':
+    unittest.main()
