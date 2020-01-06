@@ -2,6 +2,22 @@
 depdag CHANGELOG
 ================
 
+Ver. 0.4.1
+----------
+unreleased, in development
+
+Breaking changes:
+
+- rename ``is_provided`` to ``has_payload()``
+- break ``supporters()`` into ``all_supporters()`` and ``direct_supporters()``
+- introduce ``names_only()`` and ``names_list()`` helper functions
+
+Improvements:
+
+- proper ``is_cyclic()`` implementation
+- make DepDag iterable
+
+
 Ver. 0.3.1
 ----------
 unreleased, in development

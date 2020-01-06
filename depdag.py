@@ -15,30 +15,41 @@ For details and usage example see ``depdag`` README.rst:
 
 from __future__ import annotations
 
-__version_tuple__ = (0, 3, 1)
+__version_tuple__ = (0, 4, 1)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
-from typing import List, Dict, Iterable, Hashable, Any
+from typing import List, Dict, Iterable, Hashable, Union, Callable, Any
 
-VertexName = Hashable
+VertexNameT = Hashable
+PayloadT = Union[object, Callable[[], bool]]
+
+
+def names_only(vertices: Iterable[Vertex]) -> Iterable[VertexNameT]:
+    """Return a generator of names of given iterable sequence of vertices."""
+    return (vertex.name for vertex in vertices)
+
+
+def names_list(vertices: Iterable[Vertex]) -> List[VertexNameT]:
+    """Return a list of names of given iterable sequence of vertices."""
+    return list(names_only(vertices))
 
 
 class Vertex:
     """A named vertex in the DAG which knows its supporters (these are
-    the vertices it depends on directly), the name-to-vertex mapping object
-    and its provision state (provided or not).
+    the vertices it depends on directly), the name-to-vertices mapping object
+    and its associated payload state.
     """
 
-    def __init__(self, name: VertexName, vertices_map: DepDag, payload: Any = None):
-        self._name: VertexName = name
+    def __init__(self, name: VertexNameT, vertices_map: DepDag, payload: Any = None):
+        self._name: VertexNameT = name
         self._vertices_map: DepDag = vertices_map
         self._supporters: OrderedDict = OrderedDict()
-        self.payload: Any = payload
+        self.payload: PayloadT = payload
 
     def __call__(self, *args, **kwargs):
         """Provide proper error in case a misspelled ``DepDag`` method is called.
-        Without this one, one gets "TypeError: 'Vertex' object is not callable.
+        (Without this, one gets "TypeError: 'Vertex' object is not callable.)
         """
         raise AttributeError(f"Vertex object has no attribute {self._name!r}")
 
@@ -46,39 +57,49 @@ class Vertex:
         return f"<Vertex(name={self._name!r}) object at 0x{id(self):x})>"
 
     @property
-    def name(self) -> VertexName:
+    def name(self) -> VertexNameT:
         return self._name
 
-    @property
-    def is_provided(self) -> bool:
-        return self.payload is not None
+    def has_payload(self) -> bool:
+        if self.payload is None:
+            return False
+        if callable(self.payload):
+            return self.payload()
+        return True
 
-    def depends_on(self, *vertices: VertexName) -> None:
+    def depends_on(self, *vertices: VertexNameT) -> None:
+        """Define a dependency relationship within the DAG. If any of the vertices
+        does not exist, it is created first.
+        """
         self._supporters.update(OrderedDict(
             (vert, self._vertices_map[vert]) for vert in vertices
         ))
 
-    def supporters(self, recurse: bool) -> List[VertexName]:
-        if recurse:
-            # gather all supporters, recursively:
-            return list(self._supporters.keys()) + [
-                name
-                for vert in self._supporters.values()
-                for name in vert.supporters(recurse=True)
-            ]
-        # return direct supporters of this vertex only:
-        return list(self._supporters.keys())
+    def all_supporters(self) -> Iterable[Vertex]:
+        """Return a generator iterating over all supporters of this vertex,
+        retrieved recursively, debt-first, left-to-right.
+        """
+        for supporter in self._supporters.values():
+            yield supporter
+
+        for vert in self._supporters.values():
+            for supporter in vert.all_supporters():
+                yield supporter
+
+    def direct_supporters(self) -> Iterable[Vertex]:
+        """Return an iterable of supporters directly related to this vertex."""
+        return self._supporters.values()
 
     def is_resolved(self):
-        return self.is_provided and all(
-            vertex.is_resolved() for vertex in self._supporters.values()
+        return self.has_payload() and all(
+            vertex.is_resolved() for vertex in self.direct_supporters()
         )
 
 
 class DepDag:
     """DAG based dependency tracking main class.
 
-    A dict-like collection of Vertices. Maps vertex names to corresponding
+    A dict-like collection of Vertices. Maps vertices names to corresponding
     ``Vertex`` objects. Creates a ``Vertex`` under given name on first access
     (if not there yet).
 
@@ -90,7 +111,7 @@ class DepDag:
     __slots__ = ('_vertices',)
 
     def __init__(self):
-        self._vertices: Dict[VertexName, Vertex] = dict()
+        self._vertices: Dict[VertexNameT, Vertex] = dict()
 
     def __contains__(self, item):
         return item in self._vertices
@@ -98,36 +119,49 @@ class DepDag:
     def __len__(self):
         return len(self._vertices)
 
-    def __getattr__(self, name: VertexName) -> Vertex:
+    def __iter__(self):
+        return ((k, v) for k, v in self._vertices.items())
+
+    def __getattr__(self, name: VertexNameT) -> Vertex:
         if name not in self._vertices:
             self._vertices[name] = Vertex(name, self)
         return self._vertices[name]
 
-    def __getitem__(self, name: VertexName) -> Vertex:
+    def __getitem__(self, name: VertexNameT) -> Vertex:
         if name not in self._vertices:
             self._vertices[name] = Vertex(name, self)
         return self._vertices[name]
 
-    def __setitem__(self, name: VertexName, value: Vertex) -> None:
-        raise NotImplementedError("cannot set/assign vertices")
+    def __setitem__(self, name: VertexNameT, value: Vertex) -> None:
+        raise NotImplementedError("cannot set/assign vertex")
 
-    def create(self, name: VertexName) -> Vertex:
+    def create(self, name: VertexNameT) -> Vertex:
         assert name not in self._vertices
         self._vertices[name] = result = Vertex(name, self)
         return result
 
-    def all(self) -> Iterable[Vertex]:
+    def all_vertices(self) -> Iterable[Vertex]:
+        """Return an iterable of all vertices within this dag, ordered as created."""
         return self._vertices.values()
 
     def is_cyclic(self) -> bool:
-        """Return True if this directed graph contains at least one cycle,
-        False otherwise."""
-        # Yes -- ugly, Q&D implementation. A better one is on the way ;)
-        # TODO: provide proper implementation
-        try:
-            for vert in self._vertices.values():
-                vert.supporters(recurse=True)
-        except RecursionError:
-            return True
-        else:
-            return False
+        """Return ``True`` if this directed graph contains at least one cycle,
+        ``False`` otherwise.
+        """
+        safe_vertices = set()
+
+        def check(vertex, visited_vertices):
+            nonlocal safe_vertices
+
+            if vertex in visited_vertices:
+                return True
+
+            if not vertex.direct_supporters() or vertex in safe_vertices:
+                safe_vertices |= visited_vertices
+                return False
+
+            visited_vertices.add(vertex)
+            return any(check(supporter, visited_vertices.copy())
+                       for supporter in vertex.direct_supporters())
+
+        return any(check(vertex, set()) for vertex in self.all_vertices())

@@ -3,7 +3,8 @@ depdag classes unit tests.
 """
 
 import unittest
-from depdag import Vertex, DepDag
+
+from depdag import Vertex, DepDag, names_list
 
 
 class TestVertex(unittest.TestCase):
@@ -11,7 +12,7 @@ class TestVertex(unittest.TestCase):
     def test_creation__test_name(self):
         vertex = Vertex('vertex_11', DepDag())
         self.assertEqual('vertex_11', vertex.name)
-        self.assertFalse(vertex.is_provided)
+        self.assertFalse(vertex.has_payload())
 
     def test__repr__(self):
         vertex = Vertex('vertex_22', DepDag())
@@ -24,20 +25,41 @@ class TestVertex(unittest.TestCase):
         self.assertTrue('one' in dag)
         self.assertTrue('two' in dag)
 
-    def test_provide_payload(self):
+    def test__iter__(self):
+        dag = DepDag()
+        dag.aa.depends_on('bb')
+        dag.aa.depends_on('cc')
+        expected = [('aa', dag.aa), ('bb', dag.bb), ('cc', dag.cc)]
+        self.assertEqual(expected, list(dag))
+
+    def test_has_payload__for_object(self):
         vertex = Vertex('vertex_33', DepDag())
-        self.assertFalse(vertex.is_provided)
+        self.assertFalse(vertex.has_payload())
         vertex.payload = "any payload would do"
-        self.assertTrue(vertex.is_provided)
+        self.assertTrue(vertex.has_payload())
+
+    def test_has_payload__for_callable(self):
+        vertex = Vertex('vertex_44', DepDag())
+        self.assertFalse(vertex.has_payload())
+
+        call_log = list()
+
+        def has_payload_callback():
+            call_log.append('CALLED')
+            return True
+
+        vertex.payload = has_payload_callback
+        self.assertTrue(vertex.has_payload())
+        self.assertEqual(['CALLED'], call_log)
 
     def test_depends_on__test_supporters(self):
         vertex = Vertex('vertex_0', DepDag())
         vertex.depends_on('vertex_1', 'vertex_2')
         expected = ['vertex_1', 'vertex_2']
-        self.assertEqual(expected, vertex.supporters(recurse=False))
+        self.assertEqual(expected, names_list(vertex.direct_supporters()))
         vertex.depends_on('vertex_2', 'vertex_3')
         expected = ['vertex_1', 'vertex_2', 'vertex_3']
-        self.assertEqual(expected, vertex.supporters(recurse=False))
+        self.assertEqual(expected, names_list(vertex.direct_supporters()))
 
     def test_all_supporters(self):
         dag = DepDag()
@@ -45,7 +67,7 @@ class TestVertex(unittest.TestCase):
         a.depends_on('b')
         b = dag['b']
         b.depends_on('c')
-        self.assertEqual(['b', 'c'], a.supporters(recurse=True))
+        self.assertEqual(['b', 'c'], names_list(a.all_supporters()))
 
     def test_is_resolved__simplest_case(self):
         dag = DepDag()
@@ -67,12 +89,9 @@ class TestVertex(unittest.TestCase):
         dag[('vertex_a',)].depends_on(('vertex_b',))
         self.assertEqual(
             [('vertex_b',)],
-            dag[('vertex_a',)].supporters(recurse=True)
+            names_list(dag[('vertex_a',)].all_supporters())
         )
-        self.assertEqual(
-            [],
-            dag[('vertex_b',)].supporters(recurse=True)
-        )
+        self.assertEqual([], names_list(dag[('vertex_b',)].all_supporters()))
 
 
 class TestDag(unittest.TestCase):
@@ -112,21 +131,21 @@ class TestDag(unittest.TestCase):
     def test_depends_on__test_supporters(self):
         dag = DepDag()
         dag.a.depends_on('b')
-        self.assertEqual(['b'], dag.a.supporters(recurse=False))
+        self.assertEqual(['b'], names_list(dag.a.direct_supporters()))
         dag.a.depends_on('c', 'd')
-        self.assertEqual(['b', 'c', 'd'], dag.a.supporters(recurse=False))
+        self.assertEqual(['b', 'c', 'd'], names_list(dag.a.direct_supporters()))
 
     def test_all_supporters(self):
         dag = DepDag()
         dag.a.depends_on('b')
         dag.b.depends_on('c')
-        self.assertEqual(['b', 'c'], dag.a.supporters(recurse=True))
+        self.assertEqual(['b', 'c'], names_list(dag.a.all_supporters()))
 
     def test_all(self):
         dag = DepDag()
         dag.a.depends_on('b')
         dag.b.depends_on('c')
-        self.assertEqual([dag.a, dag.b, dag.c], list(dag.all()))
+        self.assertEqual([dag.a, dag.b, dag.c], list(dag.all_vertices()))
 
     def test_is_cyclic__negative__empty_dag(self):
         dag = DepDag()
@@ -155,6 +174,15 @@ class TestDag(unittest.TestCase):
         dag.b.depends_on('c')
         dag.c.depends_on('a')
         self.assertTrue(dag.is_cyclic())
+
+    def test_is_cyclic__diamond_relationship(self):
+        dag = DepDag()
+        dag.a.depends_on('b')
+        dag.b.depends_on('c', 'd')
+        dag.c.depends_on('e')
+        dag.d.depends_on('e')
+        dag.e.depends_on('f')
+        self.assertFalse(dag.is_cyclic())
 
 
 if __name__ == '__main__':

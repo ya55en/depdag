@@ -34,7 +34,7 @@ An example of typical usage:
 
  from depdag import DepDag
 
- # Create the DAG structure and get a reference to the vertices collection:
+ # Create the DAG structure:
  dag = DepDag()
 
  # Connect vertices with directed dependency relationships (i.e. the edges):
@@ -50,11 +50,11 @@ An example of typical usage:
  # - vert c -> all supporters: ['d', 'e']
  # - vert e -> all supporters: []
  for v in dag.all():
-     print("- vert", v.name, "-> all supporters:", v.supporters(recurse=True))
+     print("- vert", v.name, "-> all supporters:", names_list(v.all_supporters()))
 
  # Set some payload and see which vertices are 'resolved', that is,
  # all supporters, recursively, also have payload and the vertex
- # itself has a payload
+ # itself has payload
 
  dag.a.payload = "vert-a payload (can be anything)"
  dag.d.payload = "vert-d payload (can be anything)"
