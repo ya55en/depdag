@@ -50,7 +50,7 @@ An example of typical usage:
  # - vert c -> all supporters: ['d', 'e']
  # - vert e -> all supporters: []
  for v in dag.all():
-     print("- vert", v.name, "-> all supporters:", v.supporters(recurse=True))
+     print("- vert", v.name, "-> all supporters:", names_list(v.all_supporters()))
 
  # Set some payload and see which vertices are 'resolved', that is,
  # all supporters, recursively, also have payload and the vertex

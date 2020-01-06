@@ -15,7 +15,7 @@ For details and usage example see ``depdag`` README.rst:
 
 from __future__ import annotations
 
-__version_tuple__ = (0, 3, 1)
+__version_tuple__ = (0, 4, 1)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
@@ -25,9 +25,19 @@ VertexName = Hashable
 PayloadT = Union[object, Callable[[], bool]]
 
 
+def names_only(vertices: Iterable[Vertex]) -> Iterable[VertexName]:
+    """Return a generator of vertices names of given iterable sequence of vertices."""
+    return (vertex.name for vertex in vertices)
+
+
+def names_list(vertices: Iterable[Vertex]) -> List[VertexName]:
+    """Return a list of names of given iterable sequence of vertices."""
+    return list(names_only(vertices))
+
+
 class Vertex:
-    """A named vertex in the DAG which knows its supporters (these are
-    the vertices it depends on directly), the name-to-vertex mapping object
+    """A named vertices in the DAG which knows its supporters (these are
+    the vertices it depends on directly), the name-to-vertices mapping object
     and its provision state (provided or not).
     """
 
@@ -39,7 +49,7 @@ class Vertex:
 
     def __call__(self, *args, **kwargs):
         """Provide proper error in case a misspelled ``DepDag`` method is called.
-        Without this one, one gets "TypeError: 'Vertex' object is not callable.
+        (Without this, one gets "TypeError: 'Vertex' object is not callable.)
         """
         raise AttributeError(f"Vertex object has no attribute {self._name!r}")
 
@@ -58,23 +68,27 @@ class Vertex:
         return True
 
     def depends_on(self, *vertices: VertexName) -> None:
+        """Define a dependency relationship within the DAG. If any of the vertices
+        does not exist, it is created first.
+        """
         self._supporters.update(OrderedDict(
             (vert, self._vertices_map[vert]) for vert in vertices
         ))
 
-    def supporters(self, recurse: bool) -> List[VertexName]:
-        if recurse:
-            # gather all supporters, recursively:
-            return list(self._supporters.keys()) + [
-                name
-                for vert in self._supporters.values()
-                for name in vert.supporters(recurse=True)
-            ]
-        # return direct supporters of this vertex only:
-        return list(self._supporters.keys())
+    def all_supporters(self) -> Iterable[Vertex]:
+        """Return a generator iterating over all supporters of this vertices,
+        retrieved recursively, debt-first, left-to-right.
+        """
+        for supporter in self._supporters.values():
+            yield supporter
 
-    def direct_supporters_obj(self) -> List[Vertex]:
-        return list(self._supporters.values())
+        for vert in self._supporters.values():
+            for supporter in vert.all_supporters():
+                yield supporter
+
+    def direct_supporters(self) -> Iterable[Vertex]:
+        """Return an iterable of supporters directly related to this vertices."""
+        return self._supporters.values()
 
     def is_resolved(self):
         return self.has_payload() and all(
@@ -85,12 +99,12 @@ class Vertex:
 class DepDag:
     """DAG based dependency tracking main class.
 
-    A dict-like collection of Vertices. Maps vertex names to corresponding
+    A dict-like collection of Vertices. Maps vertices names to corresponding
     ``Vertex`` objects. Creates a ``Vertex`` under given name on first access
     (if not there yet).
 
-    Will not accept ``__setattr__`` or ``__setitem__`` assignments for vertex
-    creation -- just access the not-yet-created vertex and you have it, or
+    Will not accept ``__setattr__`` or ``__setitem__`` assignments for vertices
+    creation -- just access the not-yet-created vertices and you have it, or
     use the ``create()`` method.
     """
 
@@ -138,12 +152,12 @@ class DepDag:
             if vertex in visited_vertices:
                 return True
 
-            if not vertex.direct_supporters_obj() or vertex in safe_vertices:
+            if not vertex.direct_supporters() or vertex in safe_vertices:
                 safe_vertices |= visited_vertices
                 return False
 
             visited_vertices.add(vertex)
             return any(check(supporter, visited_vertices.copy())
-                       for supporter in vertex.direct_supporters_obj())
+                       for supporter in vertex.direct_supporters())
 
-        return any(check(node, set()) for node in self.all())
+        return any(check(vertex, set()) for vertex in self.all())
