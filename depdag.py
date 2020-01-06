@@ -19,9 +19,10 @@ __version_tuple__ = (0, 3, 1)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
-from typing import List, Dict, Iterable, Hashable, Any
+from typing import List, Dict, Iterable, Hashable, Union, Callable, Any
 
 VertexName = Hashable
+PayloadT = Union[object, Callable[[], bool]]
 
 
 class Vertex:
@@ -34,7 +35,7 @@ class Vertex:
         self._name: VertexName = name
         self._vertices_map: DepDag = vertices_map
         self._supporters: OrderedDict = OrderedDict()
-        self.payload: Any = payload
+        self.payload: PayloadT = payload
 
     def __call__(self, *args, **kwargs):
         """Provide proper error in case a misspelled ``DepDag`` method is called.
@@ -49,9 +50,12 @@ class Vertex:
     def name(self) -> VertexName:
         return self._name
 
-    @property
-    def is_provided(self) -> bool:
-        return self.payload is not None
+    def has_payload(self) -> bool:
+        if self.payload is None:
+            return False
+        if callable(self.payload):
+            return self.payload()
+        return True
 
     def depends_on(self, *vertices: VertexName) -> None:
         self._supporters.update(OrderedDict(
@@ -70,7 +74,7 @@ class Vertex:
         return list(self._supporters.keys())
 
     def is_resolved(self):
-        return self.is_provided and all(
+        return self.has_payload() and all(
             vertex.is_resolved() for vertex in self._supporters.values()
         )
 
