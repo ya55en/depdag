@@ -25,12 +25,12 @@ VertexNameT = Hashable
 PayloadT = Union[object, Callable[[], bool]]
 
 
-def names_only(vertices: Iterable[Vertex]) -> Iterable[VertexName]:
+def names_only(vertices: Iterable[Vertex]) -> Iterable[VertexNameT]:
     """Return a generator of vertices names of given iterable sequence of vertices."""
     return (vertex.name for vertex in vertices)
 
 
-def names_list(vertices: Iterable[Vertex]) -> List[VertexName]:
+def names_list(vertices: Iterable[Vertex]) -> List[VertexNameT]:
     """Return a list of names of given iterable sequence of vertices."""
     return list(names_only(vertices))
 
@@ -67,7 +67,7 @@ class Vertex:
             return self.payload()
         return True
 
-    def depends_on(self, *vertices: VertexName) -> None:
+    def depends_on(self, *vertices: VertexNameT) -> None:
         """Define a dependency relationship within the DAG. If any of the vertices
         does not exist, it is created first.
         """
@@ -141,12 +141,13 @@ class DepDag:
         return result
 
     def all(self) -> Iterable[Vertex]:
+        """Return an iterable of all vertices within this dag in order of creation."""
         return self._vertices.values()
 
     def is_cyclic(self) -> bool:
         """Return ``True`` if this directed graph contains at least one cycle,
-        ``False`` otherwise."""
-
+        ``False`` otherwise.
+        """
         safe_vertices = set()
 
         def check(vertex, visited_vertices):

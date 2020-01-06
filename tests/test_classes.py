@@ -84,17 +84,14 @@ class TestVertex(unittest.TestCase):
         self.assertTrue(b.is_resolved())
 
     def test_vertex_name_is_tuple(self):
-        # exercising any hashable to be used as a vertices name (PR #2)
+        # exercising any hashable to be used as a vertex name (PR #2)
         dag = DepDag()
         dag[('vertex_a',)].depends_on(('vertex_b',))
         self.assertEqual(
             [('vertex_b',)],
             names_list(dag[('vertex_a',)].all_supporters())
         )
-        self.assertEqual(
-            [],
-            names_list(dag[('vertex_b',)].all_supporters())
-        )
+        self.assertEqual([], names_list(dag[('vertex_b',)].all_supporters()))
 
 
 class TestDag(unittest.TestCase):
