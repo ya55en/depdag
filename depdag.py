@@ -26,7 +26,7 @@ PayloadT = Union[object, Callable[[], bool]]
 
 
 def names_only(vertices: Iterable[Vertex]) -> Iterable[VertexNameT]:
-    """Return a generator of vertices names of given iterable sequence of vertices."""
+    """Return a generator of names of given iterable sequence of vertices."""
     return (vertex.name for vertex in vertices)
 
 
@@ -36,9 +36,9 @@ def names_list(vertices: Iterable[Vertex]) -> List[VertexNameT]:
 
 
 class Vertex:
-    """A named vertices in the DAG which knows its supporters (these are
+    """A named vertex in the DAG which knows its supporters (these are
     the vertices it depends on directly), the name-to-vertices mapping object
-    and its provision state (provided or not).
+    and its associated payload state.
     """
 
     def __init__(self, name: VertexNameT, vertices_map: DepDag, payload: Any = None):
@@ -76,7 +76,7 @@ class Vertex:
         ))
 
     def all_supporters(self) -> Iterable[Vertex]:
-        """Return a generator iterating over all supporters of this vertices,
+        """Return a generator iterating over all supporters of this vertex,
         retrieved recursively, debt-first, left-to-right.
         """
         for supporter in self._supporters.values():
@@ -87,7 +87,7 @@ class Vertex:
                 yield supporter
 
     def direct_supporters(self) -> Iterable[Vertex]:
-        """Return an iterable of supporters directly related to this vertices."""
+        """Return an iterable of supporters directly related to this vertex."""
         return self._supporters.values()
 
     def is_resolved(self):
@@ -103,8 +103,8 @@ class DepDag:
     ``Vertex`` objects. Creates a ``Vertex`` under given name on first access
     (if not there yet).
 
-    Will not accept ``__setattr__`` or ``__setitem__`` assignments for vertices
-    creation -- just access the not-yet-created vertices and you have it, or
+    Will not accept ``__setattr__`` or ``__setitem__`` assignments for vertex
+    creation -- just access the not-yet-created vertex and you have it, or
     use the ``create()`` method.
     """
 
@@ -133,7 +133,7 @@ class DepDag:
         return self._vertices[name]
 
     def __setitem__(self, name: VertexNameT, value: Vertex) -> None:
-        raise NotImplementedError("cannot set/assign vertices")
+        raise NotImplementedError("cannot set/assign vertex")
 
     def create(self, name: VertexNameT) -> Vertex:
         assert name not in self._vertices
@@ -141,7 +141,7 @@ class DepDag:
         return result
 
     def all(self) -> Iterable[Vertex]:
-        """Return an iterable of all vertices within this dag in order of creation."""
+        """Return an iterable of all vertices within this dag, ordered as created."""
         return self._vertices.values()
 
     def is_cyclic(self) -> bool:
