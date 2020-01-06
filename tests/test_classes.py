@@ -3,7 +3,8 @@ depdag classes unit tests.
 """
 
 import unittest
-from depdag import Vertex, DepDag
+
+from depdag import Vertex, DepDag, names_list
 
 
 class TestVertex(unittest.TestCase):
@@ -34,10 +35,10 @@ class TestVertex(unittest.TestCase):
         vertex = Vertex('vertex_0', DepDag())
         vertex.depends_on('vertex_1', 'vertex_2')
         expected = ['vertex_1', 'vertex_2']
-        self.assertEqual(expected, vertex.supporters(recurse=False))
+        self.assertEqual(expected, names_list(vertex.direct_supporters()))
         vertex.depends_on('vertex_2', 'vertex_3')
         expected = ['vertex_1', 'vertex_2', 'vertex_3']
-        self.assertEqual(expected, vertex.supporters(recurse=False))
+        self.assertEqual(expected, names_list(vertex.direct_supporters()))
 
     def test_all_supporters(self):
         dag = DepDag()
@@ -45,7 +46,7 @@ class TestVertex(unittest.TestCase):
         a.depends_on('b')
         b = dag['b']
         b.depends_on('c')
-        self.assertEqual(['b', 'c'], a.supporters(recurse=True))
+        self.assertEqual(['b', 'c'], names_list(a.all_supporters()))
 
     def test_is_resolved__simplest_case(self):
         dag = DepDag()
@@ -62,16 +63,16 @@ class TestVertex(unittest.TestCase):
         self.assertTrue(b.is_resolved())
 
     def test_vertex_name_is_tuple(self):
-        # exercising any hashable to be used as a vertex name (PR #2)
+        # exercising any hashable to be used as a vertices name (PR #2)
         dag = DepDag()
         dag[('vertex_a',)].depends_on(('vertex_b',))
         self.assertEqual(
             [('vertex_b',)],
-            dag[('vertex_a',)].supporters(recurse=True)
+            names_list(dag[('vertex_a',)].all_supporters())
         )
         self.assertEqual(
             [],
-            dag[('vertex_b',)].supporters(recurse=True)
+            names_list(dag[('vertex_b',)].all_supporters())
         )
 
 
@@ -112,15 +113,15 @@ class TestDag(unittest.TestCase):
     def test_depends_on__test_supporters(self):
         dag = DepDag()
         dag.a.depends_on('b')
-        self.assertEqual(['b'], dag.a.supporters(recurse=False))
+        self.assertEqual(['b'], names_list(dag.a.direct_supporters()))
         dag.a.depends_on('c', 'd')
-        self.assertEqual(['b', 'c', 'd'], dag.a.supporters(recurse=False))
+        self.assertEqual(['b', 'c', 'd'], names_list(dag.a.direct_supporters()))
 
     def test_all_supporters(self):
         dag = DepDag()
         dag.a.depends_on('b')
         dag.b.depends_on('c')
-        self.assertEqual(['b', 'c'], dag.a.supporters(recurse=True))
+        self.assertEqual(['b', 'c'], names_list(dag.a.all_supporters()))
 
     def test_all(self):
         dag = DepDag()
