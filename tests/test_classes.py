@@ -25,6 +25,13 @@ class TestVertex(unittest.TestCase):
         self.assertTrue('one' in dag)
         self.assertTrue('two' in dag)
 
+    def test__iter__(self):
+        dag = DepDag()
+        dag.aa.depends_on('bb')
+        dag.aa.depends_on('cc')
+        expected = [('aa', dag.aa), ('bb', dag.bb), ('cc', dag.cc)]
+        self.assertEqual(expected, list(dag))
+
     def test_has_payload__for_object(self):
         vertex = Vertex('vertex_33', DepDag())
         self.assertFalse(vertex.has_payload())

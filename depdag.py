@@ -21,7 +21,7 @@ __version__ = '.'.join(map(str, __version_tuple__))
 from collections import OrderedDict
 from typing import List, Dict, Iterable, Hashable, Union, Callable, Any
 
-VertexName = Hashable
+VertexNameT = Hashable
 PayloadT = Union[object, Callable[[], bool]]
 
 
@@ -41,8 +41,8 @@ class Vertex:
     and its provision state (provided or not).
     """
 
-    def __init__(self, name: VertexName, vertices_map: DepDag, payload: Any = None):
-        self._name: VertexName = name
+    def __init__(self, name: VertexNameT, vertices_map: DepDag, payload: Any = None):
+        self._name: VertexNameT = name
         self._vertices_map: DepDag = vertices_map
         self._supporters: OrderedDict = OrderedDict()
         self.payload: PayloadT = payload
@@ -57,7 +57,7 @@ class Vertex:
         return f"<Vertex(name={self._name!r}) object at 0x{id(self):x})>"
 
     @property
-    def name(self) -> VertexName:
+    def name(self) -> VertexNameT:
         return self._name
 
     def has_payload(self) -> bool:
@@ -111,7 +111,7 @@ class DepDag:
     __slots__ = ('_vertices',)
 
     def __init__(self):
-        self._vertices: Dict[VertexName, Vertex] = dict()
+        self._vertices: Dict[VertexNameT, Vertex] = dict()
 
     def __contains__(self, item):
         return item in self._vertices
@@ -119,20 +119,23 @@ class DepDag:
     def __len__(self):
         return len(self._vertices)
 
-    def __getattr__(self, name: VertexName) -> Vertex:
+    def __iter__(self):
+        return ((k, v) for k, v in self._vertices.items())
+
+    def __getattr__(self, name: VertexNameT) -> Vertex:
         if name not in self._vertices:
             self._vertices[name] = Vertex(name, self)
         return self._vertices[name]
 
-    def __getitem__(self, name: VertexName) -> Vertex:
+    def __getitem__(self, name: VertexNameT) -> Vertex:
         if name not in self._vertices:
             self._vertices[name] = Vertex(name, self)
         return self._vertices[name]
 
-    def __setitem__(self, name: VertexName, value: Vertex) -> None:
+    def __setitem__(self, name: VertexNameT, value: Vertex) -> None:
         raise NotImplementedError("cannot set/assign vertices")
 
-    def create(self, name: VertexName) -> Vertex:
+    def create(self, name: VertexNameT) -> Vertex:
         assert name not in self._vertices
         self._vertices[name] = result = Vertex(name, self)
         return result
