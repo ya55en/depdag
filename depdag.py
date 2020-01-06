@@ -92,7 +92,7 @@ class Vertex:
 
     def is_resolved(self):
         return self.has_payload() and all(
-            vertex.is_resolved() for vertex in self._supporters.values()
+            vertex.is_resolved() for vertex in self.direct_supporters()
         )
 
 
@@ -140,7 +140,7 @@ class DepDag:
         self._vertices[name] = result = Vertex(name, self)
         return result
 
-    def all(self) -> Iterable[Vertex]:
+    def all_vertices(self) -> Iterable[Vertex]:
         """Return an iterable of all vertices within this dag, ordered as created."""
         return self._vertices.values()
 
@@ -164,4 +164,4 @@ class DepDag:
             return any(check(supporter, visited_vertices.copy())
                        for supporter in vertex.direct_supporters())
 
-        return any(check(vertex, set()) for vertex in self.all())
+        return any(check(vertex, set()) for vertex in self.all_vertices())

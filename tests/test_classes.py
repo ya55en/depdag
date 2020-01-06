@@ -145,7 +145,7 @@ class TestDag(unittest.TestCase):
         dag = DepDag()
         dag.a.depends_on('b')
         dag.b.depends_on('c')
-        self.assertEqual([dag.a, dag.b, dag.c], list(dag.all()))
+        self.assertEqual([dag.a, dag.b, dag.c], list(dag.all_vertices()))
 
     def test_is_cyclic__negative__empty_dag(self):
         dag = DepDag()

@@ -27,7 +27,7 @@ class TestUsageExample(unittest.TestCase):
         # - vert d -> all supporters: []
         # - vert c -> all supporters: ['d', 'e']
         # - vert e -> all supporters: []
-        for v in dag.all():
+        for v in dag.all_vertices():
             print("- vert", v.name, "-> all supporters:", names_list(v.all_supporters()))
 
         # Set some payload and see which vertices are 'resolved', that is,
