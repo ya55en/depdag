@@ -25,7 +25,7 @@ setup(
         'License :: OSI Approved :: MIT License',
     ],
     keywords='dependency dag',
-    packages=[],
+    py_modules=['depdag'],
     include_package_data=True,
     zip_safe=False,
     install_requires=[],
