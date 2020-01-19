@@ -184,7 +184,7 @@ class TestDag(unittest.TestCase):
         dag.e.depends_on('f')
         self.assertFalse(dag.is_cyclic())
 
-    def test_clone__case_1(self):
+    def test_clone__case_simple(self):
         dag = DepDag()
         dag.create('a', 'payload-a')
         dag.create('b', 'payload-b')
@@ -199,7 +199,7 @@ class TestDag(unittest.TestCase):
         self.assertEqual([new_dag.b], list(new_dag.a.direct_supporters()))
         self.assertEqual([new_dag.c], list(new_dag.b.direct_supporters()))
 
-    def test_clone__case_2(self):
+    def test_clone__case_diamond(self):
         dag = DepDag()
         dag.create('a', 'payload-a')
         dag.create('b', 'payload-b')
@@ -226,6 +226,29 @@ class TestDag(unittest.TestCase):
         self.assertEqual('payload-d', new_dag.d.payload)
         self.assertEqual('payload-e', new_dag.e.payload)
         self.assertEqual('payload-f', new_dag.f.payload)
+
+    def test_clone__cyclic(self):
+        dag = DepDag()
+        dag.create('a', 'payload-a')
+        dag.create('b', 'payload-b')
+        dag.create('c', 'payload-c')
+        dag.create('d', 'payload-d')
+        dag.a.depends_on('b')
+        dag.b.depends_on('c')
+        dag.c.depends_on('d')
+        dag.d.depends_on('a')
+        self.assertTrue(dag.is_cyclic())
+
+        new_dag = dag.clone()
+        self.assertEqual([new_dag.b], list(new_dag.a.direct_supporters()))
+        self.assertEqual([new_dag.c], list(new_dag.b.direct_supporters()))
+        self.assertEqual([new_dag.d], list(new_dag.c.direct_supporters()))
+        self.assertEqual([new_dag.a], list(new_dag.d.direct_supporters()))
+        self.assertEqual('payload-a', new_dag.a.payload)
+        self.assertEqual('payload-b', new_dag.b.payload)
+        self.assertEqual('payload-c', new_dag.c.payload)
+        self.assertEqual('payload-d', new_dag.d.payload)
+        self.assertTrue(new_dag.is_cyclic())
 
 
 if __name__ == '__main__':
