@@ -184,7 +184,7 @@ class TestDag(unittest.TestCase):
         dag.e.depends_on('f')
         self.assertFalse(dag.is_cyclic())
 
-    def test_clone(self):
+    def test_clone__case_1(self):
         dag = DepDag()
         dag.create('a', 'payload-a')
         dag.create('b', 'payload-b')
@@ -193,16 +193,13 @@ class TestDag(unittest.TestCase):
         dag.b.depends_on('c')
         new_dag = dag.clone()
 
-        self.assertIsNotNone(new_dag.vertices.get('a'))
-        self.assertEqual('payload-a', new_dag.vertices['a'].payload)
-        self.assertIsNotNone(new_dag.vertices.get('b'))
-        self.assertEqual('payload-b', new_dag.vertices['b'].payload)
-        self.assertIsNotNone(new_dag.vertices.get('c'))
-        self.assertEqual('payload-c', new_dag.vertices['c'].payload)
-        self.assertIs(new_dag.vertices['b'], list(new_dag.vertices['a'].direct_supporters())[0])
-        self.assertIs(new_dag.vertices['c'], list(new_dag.vertices['b'].direct_supporters())[0])
+        self.assertEqual('payload-a', new_dag.a.payload)
+        self.assertEqual('payload-b', new_dag.b.payload)
+        self.assertEqual('payload-c', new_dag.c.payload)
+        self.assertEqual([new_dag.b], list(new_dag.a.direct_supporters()))
+        self.assertEqual([new_dag.c], list(new_dag.b.direct_supporters()))
 
-    def test_clone_2(self):
+    def test_clone__case_2(self):
         dag = DepDag()
         dag.create('a', 'payload-a')
         dag.create('b', 'payload-b')
@@ -217,24 +214,18 @@ class TestDag(unittest.TestCase):
         dag.e.depends_on('f')
         new_dag = dag.clone()
 
-        self.assertIsNotNone(new_dag.vertices.get('a'))
-        self.assertEqual('payload-a', new_dag.vertices['a'].payload)
-        self.assertIsNotNone(new_dag.vertices.get('b'))
-        self.assertEqual('payload-b', new_dag.vertices['b'].payload)
-        self.assertIsNotNone(new_dag.vertices.get('c'))
-        self.assertEqual('payload-c', new_dag.vertices['c'].payload)
-        self.assertIsNotNone(new_dag.vertices.get('d'))
-        self.assertEqual('payload-d', new_dag.vertices['d'].payload)
-        self.assertIsNotNone(new_dag.vertices.get('e'))
-        self.assertEqual('payload-e', new_dag.vertices['e'].payload)
-        self.assertIsNotNone(new_dag.vertices.get('f'))
-        self.assertEqual('payload-f', new_dag.vertices['f'].payload)
-        self.assertIs(new_dag.vertices['b'], list(new_dag.vertices['a'].direct_supporters())[0])
-        self.assertIs(new_dag.vertices['c'], list(new_dag.vertices['b'].direct_supporters())[0])
-        self.assertIs(new_dag.vertices['d'], list(new_dag.vertices['b'].direct_supporters())[1])
-        self.assertIs(new_dag.vertices['e'], list(new_dag.vertices['c'].direct_supporters())[0])
-        self.assertIs(new_dag.vertices['e'], list(new_dag.vertices['d'].direct_supporters())[0])
-        self.assertIs(new_dag.vertices['f'], list(new_dag.vertices['e'].direct_supporters())[0])
+        self.assertEqual([new_dag.b], list(new_dag.a.direct_supporters()))
+        self.assertEqual([new_dag.c, new_dag.d], list(new_dag.b.direct_supporters()))
+        self.assertEqual([new_dag.e], list(new_dag.c.direct_supporters()))
+        self.assertEqual([new_dag.e], list(new_dag.d.direct_supporters()))
+        self.assertEqual([new_dag.f], list(new_dag.e.direct_supporters()))
+
+        self.assertEqual('payload-a', new_dag.a.payload)
+        self.assertEqual('payload-b', new_dag.b.payload)
+        self.assertEqual('payload-c', new_dag.c.payload)
+        self.assertEqual('payload-d', new_dag.d.payload)
+        self.assertEqual('payload-e', new_dag.e.payload)
+        self.assertEqual('payload-f', new_dag.f.payload)
 
 
 if __name__ == '__main__':

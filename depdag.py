@@ -135,10 +135,6 @@ class DepDag:
     def __setitem__(self, name: VertexNameT, value: Vertex) -> None:
         raise NotImplementedError("cannot set/assign vertex")
 
-    @property
-    def vertices(self):
-        return self._vertices
-
     def create(self, name: VertexNameT, payload: Any = None) -> Vertex:
         assert name not in self._vertices
         self._vertices[name] = result = Vertex(name, self, payload)
@@ -173,9 +169,12 @@ class DepDag:
     def clone(self):
         cls = self.__class__
         new_dag = cls()
-        for vert in self.vertices.values():
+
+        for vert in self._vertices.values():
             new_dag.create(vert.name, vert.payload)
-        for vert in self.vertices.values():
+
+        for vert in self._vertices.values():
             for supporter in vert.direct_supporters():
-                new_dag.vertices.get(vert.name).depends_on(supporter.name)
+                new_dag[vert.name].depends_on(supporter.name)
+
         return new_dag
