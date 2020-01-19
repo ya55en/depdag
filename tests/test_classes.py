@@ -4,7 +4,7 @@ depdag classes unit tests.
 
 import unittest
 
-from depdag import Vertex, DepDag, names_list
+from depdag import Vertex, DepDag, names_list, CycleDetected
 
 
 class TestVertex(unittest.TestCase):
@@ -100,6 +100,13 @@ class TestDag(unittest.TestCase):
         dag = DepDag()
         self.assertEqual(0, len(dag))
 
+    def test_creation_with_check_for_cycles(self):
+        dag = DepDag(fail_on_cycle=True)
+        dag.a.depends_on('b')
+        dag.b.depends_on('c')
+        with self.assertRaisesRegex(CycleDetected, r"on adding vertices \('a',\)"):
+            dag.c.depends_on('a')
+
     def test__getitem__(self):
         dag = DepDag()
         vertex_a = dag['a']
@@ -183,6 +190,19 @@ class TestDag(unittest.TestCase):
         dag.d.depends_on('e')
         dag.e.depends_on('f')
         self.assertFalse(dag.is_cyclic())
+
+    def test_ensure_not_cyclic__passes(self):
+        dag = DepDag()
+        dag.a.depends_on('b')
+        dag.b.depends_on('c', 'd')
+        dag.ensure_not_cyclic()
+
+    def test_ensure_not_cyclic__raises(self):
+        dag = DepDag()
+        dag.a.depends_on('b')
+        dag.b.depends_on('a')
+        with self.assertRaisesRegex(CycleDetected, 'graph is cyclic'):
+            dag.ensure_not_cyclic()
 
 
 if __name__ == '__main__':

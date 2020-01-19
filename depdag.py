@@ -35,6 +35,11 @@ def names_list(vertices: Iterable[Vertex]) -> List[VertexNameT]:
     return list(names_only(vertices))
 
 
+class CycleDetected(Exception):
+    """Raise when a ``DepDag`` has ``fail_on_cycle = True`` at creation
+    time and an actual cycle is detected during new vertex addition."""
+
+
 class Vertex:
     """A named vertex in the DAG which knows its supporters (these are
     the vertices it depends on directly), the name-to-vertices mapping object
@@ -75,6 +80,10 @@ class Vertex:
             (vert, self._vertices_map[vert]) for vert in vertices
         ))
 
+        if self._vertices_map.fail_on_cycle:
+            self._vertices_map.ensure_not_cyclic(
+                f"on adding vertices {vertices}")
+
     def all_supporters(self) -> Iterable[Vertex]:
         """Return a generator iterating over all supporters of this vertex,
         retrieved recursively, debt-first, left-to-right.
@@ -108,10 +117,21 @@ class DepDag:
     use the ``create()`` method.
     """
 
-    __slots__ = ('_vertices',)
+    __slots__ = ('_vertices', '_fail_on_cycle')
 
-    def __init__(self):
-        self._vertices: Dict[VertexNameT, Vertex] = dict()
+    def __init__(self, fail_on_cycle: bool = False):
+        """Initialize the DepDag.
+
+        @param bool fail_on_cycle: when ``True``, inspect the dag for new
+           cycles at each vertex addition and if the check is positive --
+           raise ``CycleDetected`` exception.
+        """
+        self._vertices: Dict[VertexNameT, Vertex] = OrderedDict()
+        self._fail_on_cycle = fail_on_cycle
+
+    @property
+    def fail_on_cycle(self) -> bool:
+        return self._fail_on_cycle
 
     def __contains__(self, item):
         return item in self._vertices
@@ -165,3 +185,9 @@ class DepDag:
                        for supporter in vertex.direct_supporters())
 
         return any(check(vertex, set()) for vertex in self.all_vertices())
+
+    def ensure_not_cyclic(self, message: str = 'graph is cyclic') -> None:
+        """Raise ``CycleDetected`` with ``message`` if cyclic check returns
+        ``True``, otherwise pass silently."""
+        if self.is_cyclic():
+            raise CycleDetected(message)
