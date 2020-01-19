@@ -19,11 +19,11 @@ __version_tuple__ = (0, 4, 1)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
-from typing import List, Dict, Iterable, Hashable, Union, Callable, Any
+from typing import List, Dict, Iterable, Hashable, Union, Callable
 
 VertexNameT = Hashable
 PayloadT = Union[object, Callable[[], bool]]
-ClonePayloadMethodT: Callable[[PayloadT], PayloadT]
+ClonePayloadMethodT = Callable[[PayloadT], PayloadT]
 
 
 def names_only(vertices: Iterable[Vertex]) -> Iterable[VertexNameT]:
@@ -42,7 +42,7 @@ class Vertex:
     and its associated payload state.
     """
 
-    def __init__(self, name: VertexNameT, vertices_map: DepDag, payload: Any = None):
+    def __init__(self, name: VertexNameT, vertices_map: DepDag, payload: PayloadT = None):
         self._name: VertexNameT = name
         self._vertices_map: DepDag = vertices_map
         self._supporters: OrderedDict = OrderedDict()
@@ -136,7 +136,7 @@ class DepDag:
     def __setitem__(self, name: VertexNameT, value: Vertex) -> None:
         raise NotImplementedError("cannot set/assign vertex")
 
-    def new_vertex(self, name: VertexNameT, payload: Any = None) -> Vertex:
+    def new_vertex(self, name: VertexNameT, payload: PayloadT = None) -> Vertex:
         assert name not in self._vertices
         self._vertices[name] = result = Vertex(name, self, payload)
         return result
