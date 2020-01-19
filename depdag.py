@@ -136,7 +136,7 @@ class DepDag:
     def __setitem__(self, name: VertexNameT, value: Vertex) -> None:
         raise NotImplementedError("cannot set/assign vertex")
 
-    def create(self, name: VertexNameT, payload: Any = None) -> Vertex:
+    def new_vertex(self, name: VertexNameT, payload: Any = None) -> Vertex:
         assert name not in self._vertices
         self._vertices[name] = result = Vertex(name, self, payload)
         return result
@@ -168,10 +168,11 @@ class DepDag:
         return any(check(vertex, set()) for vertex in self.all_vertices())
 
     def clone(self, clone_payload_method: ClonePayloadMethodT = lambda p: p):
-        """Clone this dag into a new one, having vertices with names and dependencies
-        mirroring those of the original dag. Payload is cloned using given
-        ``clone_payload_method`` callable, by default it is the identity function
-        (which simply puts the same payload reference on the cloned vertex).
+        """Clone this dag into a new one, having vertices with names
+        and dependencies mirroring those of the original dag. Payload is
+        cloned using given ``clone_payload_method`` callable, by default
+        it is the identity function (which simply puts the same payload
+        reference on the cloned vertex).
 
         - To not copy the payload at all, use
             ``clone_payload_method=lambda p: None``.
@@ -184,7 +185,7 @@ class DepDag:
 
         for vert in self._vertices.values():
             cloned_payload = clone_payload_method(vert.payload)
-            dag_clone.create(vert.name, cloned_payload)
+            dag_clone.new_vertex(vert.name, cloned_payload)
 
         for vert in self._vertices.values():
             for supporter in vert.direct_supporters():

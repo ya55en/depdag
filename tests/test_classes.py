@@ -153,7 +153,7 @@ class TestDag(unittest.TestCase):
 
     def test_is_cyclic__negative__one_vertex(self):
         dag = DepDag()
-        dag.create('a')
+        dag.new_vertex('a')
         self.assertEqual(1, len(dag))
         self.assertFalse(dag.is_cyclic())
 
@@ -186,9 +186,9 @@ class TestDag(unittest.TestCase):
 
     def test_clone__case_simple(self):
         dag = DepDag()
-        dag.create('a', 'payload-a')
-        dag.create('b', 'payload-b')
-        dag.create('c', 'payload-c')
+        dag.new_vertex('a', 'payload-a')
+        dag.new_vertex('b', 'payload-b')
+        dag.new_vertex('c', 'payload-c')
         dag.a.depends_on('b')
         dag.b.depends_on('c')
         new_dag = dag.clone()
@@ -201,12 +201,12 @@ class TestDag(unittest.TestCase):
 
     def test_clone__case_diamond(self):
         dag = DepDag()
-        dag.create('a', 'payload-a')
-        dag.create('b', 'payload-b')
-        dag.create('c', 'payload-c')
-        dag.create('d', 'payload-d')
-        dag.create('e', 'payload-e')
-        dag.create('f', 'payload-f')
+        dag.new_vertex('a', 'payload-a')
+        dag.new_vertex('b', 'payload-b')
+        dag.new_vertex('c', 'payload-c')
+        dag.new_vertex('d', 'payload-d')
+        dag.new_vertex('e', 'payload-e')
+        dag.new_vertex('f', 'payload-f')
         dag.a.depends_on('b')
         dag.b.depends_on('c', 'd')
         dag.c.depends_on('e')
@@ -229,10 +229,10 @@ class TestDag(unittest.TestCase):
 
     def test_clone__cyclic(self):
         dag = DepDag()
-        dag.create('a', 'payload-a')
-        dag.create('b', 'payload-b')
-        dag.create('c', 'payload-c')
-        dag.create('d', 'payload-d')
+        dag.new_vertex('a', 'payload-a')
+        dag.new_vertex('b', 'payload-b')
+        dag.new_vertex('c', 'payload-c')
+        dag.new_vertex('d', 'payload-d')
         dag.a.depends_on('b')
         dag.b.depends_on('c')
         dag.c.depends_on('d')
