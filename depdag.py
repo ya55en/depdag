@@ -15,7 +15,7 @@ For details and usage example see ``depdag`` README.rst:
 
 from __future__ import annotations
 
-__version_tuple__ = (0, 4, 1)
+__version_tuple__ = (0, 4, 2)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict

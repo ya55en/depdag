@@ -2,6 +2,13 @@
 depdag CHANGELOG
 ================
 
+Ver. 0.4.2
+----------
+
+- implement clone method (PR #15)
+- provide `fail_on_cycle` option at creation (PR #13)
+
+
 Ver. 0.4.1
 ----------
 unreleased, in development
