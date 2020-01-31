@@ -19,10 +19,11 @@ __version_tuple__ = (0, 4, 1)
 __version__ = '.'.join(map(str, __version_tuple__))
 
 from collections import OrderedDict
-from typing import List, Dict, Iterable, Hashable, Union, Callable, Any
+from typing import List, Dict, Iterable, Hashable, Union, Callable
 
 VertexNameT = Hashable
 PayloadT = Union[object, Callable[[], bool]]
+ClonePayloadMethodT = Callable[[PayloadT], PayloadT]
 
 
 def names_only(vertices: Iterable[Vertex]) -> Iterable[VertexNameT]:
@@ -46,7 +47,7 @@ class Vertex:
     and its associated payload state.
     """
 
-    def __init__(self, name: VertexNameT, vertices_map: DepDag, payload: Any = None):
+    def __init__(self, name: VertexNameT, vertices_map: DepDag, payload: PayloadT = None):
         self._name: VertexNameT = name
         self._vertices_map: DepDag = vertices_map
         self._supporters: OrderedDict = OrderedDict()
@@ -155,9 +156,9 @@ class DepDag:
     def __setitem__(self, name: VertexNameT, value: Vertex) -> None:
         raise NotImplementedError("cannot set/assign vertex")
 
-    def create(self, name: VertexNameT) -> Vertex:
+    def new_vertex(self, name: VertexNameT, payload: PayloadT = None) -> Vertex:
         assert name not in self._vertices
-        self._vertices[name] = result = Vertex(name, self)
+        self._vertices[name] = result = Vertex(name, self, payload)
         return result
 
     def all_vertices(self) -> Iterable[Vertex]:
@@ -185,6 +186,32 @@ class DepDag:
                        for supporter in vertex.direct_supporters())
 
         return any(check(vertex, set()) for vertex in self.all_vertices())
+
+    def clone(self, clone_payload_method: ClonePayloadMethodT = lambda p: p):
+        """Clone this dag into a new one, having vertices with names
+        and dependencies mirroring those of the original dag. Payload is
+        cloned using given ``clone_payload_method`` callable, by default
+        it is the identity function (which simply puts the same payload
+        reference on the cloned vertex).
+
+        - To not copy the payload at all, use
+            ``clone_payload_method=lambda p: None``.
+        - To have a shallow copy of the payload on the cloned vertex, use
+            ``clone_payload_method=copy.copy``.
+        - To make a deep copy of the payload, use
+           ``clone_payload_method=copy.deepcopy``.
+        """
+        dag_clone = DepDag()
+
+        for vert in self._vertices.values():
+            cloned_payload = clone_payload_method(vert.payload)
+            dag_clone.new_vertex(vert.name, cloned_payload)
+
+        for vert in self._vertices.values():
+            for supporter in vert.direct_supporters():
+                dag_clone[vert.name].depends_on(supporter.name)
+
+        return dag_clone
 
     def ensure_not_cyclic(self, message: str = 'graph is cyclic') -> None:
         """Raise ``CycleDetected`` with ``message`` if cyclic check returns
